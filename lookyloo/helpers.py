@@ -180,6 +180,30 @@ def splash_status() -> Tuple[bool, str]:
     except Exception as err:
         return False, f'Other error occurred: {err}'
 
+# TODO: copypaste
+def make_scrape_request(endpoint_url, url, cookies,
+        depth, user_agent, referer, headers, proxy):
+    try:
+        if not cookies:
+            cookies = None
+        scrape_result = requests.post(endpoint_url,
+            json={
+                'url': url,
+                'cookies': cookies,
+                'depth': depth, # TODO: spidering code
+                'user_agent': user_agent,
+                'referer': referer,
+                'headers': headers, # TODO: these seem to overwrite user_agent
+                'proxy': proxy # TODO: proxy support
+                }
+        )
+        scrape_result.raise_for_status()
+        scrape_json = scrape_result.json()
+        return True, scrape_json
+    except HTTPError as http_err:
+        return False, f'HTTP error occurred: {http_err}'
+    except Exception as err:
+        return False, f'Other error occurred: {err}'
 
 def get_cache_directory(root: Path, identifier: str, namespace: Optional[str] = None) -> Path:
     m = hashlib.md5()

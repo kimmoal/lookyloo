@@ -22,12 +22,20 @@ services:
         - "5023:5023"
     command: --disable-private-mode
 
+  scraper:
+      image: "scrape-service"
+      security_opt:
+         - seccomp:chrome.json
+      ports:
+         - "3000:3000"
+
   lookyloo:
     build: .
     working_dir: /lookyloo
     tty: true
     environment:
         - SPLASH_URL_DOCKER=http://splash:8050
+        - SCRAPE_URL_DOCKER=http://scraper:3000
     command:
         - /bin/sh
         - -c
@@ -47,3 +55,4 @@ services:
         - "redis-cache"
         - "redis-indexing"
         - "splash"
+        - "scraper"

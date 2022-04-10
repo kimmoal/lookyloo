@@ -16,7 +16,7 @@ from redis import Redis
 from scrapysplashwrapper import crawl
 
 from lookyloo.default import AbstractManager, get_config, get_socket_path, safe_create_dir
-from lookyloo.helpers import get_captures_dir, get_splash_url, load_cookies, splash_status
+from lookyloo.helpers import get_captures_dir, get_splash_url, load_cookies, splash_status, make_scrape_request
 
 logging.basicConfig(format='%(asctime)s %(name)s %(levelname)s:%(message)s',
                     level=logging.INFO)
@@ -130,16 +130,19 @@ class AsyncCapture(AbstractManager):
             depth = int(get_config('generic', 'max_depth'))
         self.logger.info(f'Capturing {url}')
         try:
-            items = crawl(self.splash_url, url, cookies=cookies, depth=depth, user_agent=ua,
-                          referer=referer, headers=headers, proxy=proxy, log_enabled=True,
-                          log_level=get_config('generic', 'splash_loglevel'))
+#            items = crawl(self.splash_url, url, cookies=cookies, depth=depth, user_agent=ua,
+#                          referer=referer, headers=headers, proxy=proxy, log_enabled=True,
+#                          log_level=get_config('generic', 'splash_loglevel'))
+            scraper_url = "http://scraper:3000"
+            status, items = make_scrape_request(scraper_url, url, cookies=cookies, depth=depth, user_agent=ua,
+                        referer=referer, headers=headers, proxy=proxy)
         except Exception as e:
             self.logger.critical(f'Something went terribly wrong when capturing {url}.')
             raise e
-        if not items:
+        if not status:
             # broken
             self.logger.critical(f'Something went terribly wrong when capturing {url}.')
-            return False, f'Something went terribly wrong when capturing {url}.'
+            return False, items
         width = len(str(len(items)))
         now = datetime.now()
         dirpath = self.capture_dir / str(now.year) / f'{now.month:02}' / now.isoformat()
